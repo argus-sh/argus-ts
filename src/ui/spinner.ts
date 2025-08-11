@@ -80,7 +80,14 @@ export function createSpinner(textOrOptions?: string | SpinnerOptions, colors?: 
       frames = resolveFrames(newFrames);
       return this;
     },
-    setInterval(ms: number) { intervalMs = ms; if (interval) { clearInterval(interval); interval = setInterval(render, intervalMs); } return this; },
+    setInterval(ms: number) { 
+      intervalMs = ms; 
+      if (interval) { 
+        clearInterval(interval); 
+        interval = setInterval(render, intervalMs); 
+      } 
+      return this; 
+    },
     setPrefix(prefix?: string) { options.prefix = prefix; return this; },
     setSuffix(suffix?: string) { options.suffix = suffix; return this; },
     update(partial: Partial<SpinnerOptions>) { options = { ...options, ...partial }; return this; },

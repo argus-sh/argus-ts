@@ -4,8 +4,10 @@ export type BoxOptions = {
 };
 
 export function drawBox(text: string, options?: BoxOptions) {
+  // Handle null/undefined text gracefully
+  const safeText = text ?? '';
   const padding = Math.max(0, options?.padding ?? 1);
-  const lines = text.split('\n');
+  const lines = safeText.split('\n');
   const maxLen = Math.max(...lines.map(l => l.length));
   const innerWidth = maxLen + padding * 2;
   const top = `╭${'─'.repeat(innerWidth + 2)}╮`;

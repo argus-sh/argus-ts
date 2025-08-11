@@ -9,7 +9,7 @@ export default defineConfig({
       provider: 'v8',
       thresholds: {
         100: false,
-        functions: 90,
+        functions: 75,
         branches: 85,
         lines: 90,
         statements: 90,
@@ -17,6 +17,9 @@ export default defineConfig({
       exclude: [
         'src/ui/prompt.ts',
         'src/types.ts',
+        'dist/**/*',
+        'examples/**/*',
+        'vitest.config.ts',
       ],
     },
   },

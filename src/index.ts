@@ -60,9 +60,9 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
     },
 
     option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
-      if (config && typeof config.defaultValue === 'string') {
-        const valueName = config.valueName ? config.valueName.slice(1, -1) : 'value';
-        state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue, valueName });
+      if (config && config.valueName) {
+        const valueName = config.valueName.slice(1, -1);
+        state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue as string | undefined, valueName });
       } else {
         state.options.push({ kind: 'booleanOption', flag, description, defaultValue: (config as any)?.defaultValue as boolean | undefined });
       }
@@ -101,9 +101,9 @@ function createBuilder(state: DefinitionState) {
       return b;
     },
     option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
-      if (config && typeof config.defaultValue === 'string') {
-        const valueName = config.valueName ? config.valueName.slice(1, -1) : 'value';
-        state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue, valueName });
+      if (config && config.valueName) {
+        const valueName = config.valueName.slice(1, -1);
+        state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue as string | undefined, valueName });
       } else {
         state.options.push({ kind: 'booleanOption', flag, description, defaultValue: (config as any)?.defaultValue as boolean | undefined });
       }
@@ -133,7 +133,12 @@ function printHelp(state: DefinitionState, ui?: Ui) {
   };
 
   const lines: string[] = [];
-  lines.push(colorize.title(state.commandPath.join(' ')));
+  // Build the full command signature for the title
+  const titleParts: string[] = [...state.commandPath];
+  for (const p of state.positionals) {
+    titleParts.push(colorize.arg(`<${p.name}>`));
+  }
+  lines.push(colorize.title(titleParts.join(' ')));
   if (state.config.description) lines.push(state.config.description);
   lines.push('');
 
@@ -207,14 +212,32 @@ function padAnsiLike(input: string, targetWidth: number): string {
   return input + ' '.repeat(pad);
 }
 
-async function runParse(state: DefinitionState, argv?: string[]) {
+async function runParse(state: DefinitionState, argv?: string[], isDelegated: boolean = false) {
   const argsv = argv ?? process.argv.slice(2);
+
+  // If only options are provided (no subcommand tokens) and --help is present,
+  // always show the root command help regardless of which builder/executor
+  // parse() was called on.
+  const hasNonOptionToken = argsv.some(t => typeof t === 'string' && !t.startsWith('--'));
+  if (argsv.includes('--help') && !hasNonOptionToken) {
+    const ui = createUi();
+    if (isDelegated) {
+      // We arrived here after explicit subcommand token, show subcommand help
+      printHelp(state, ui);
+    } else {
+      // No explicit subcommand token in argv for this parse call → show root help
+      let rootState: DefinitionState = state;
+      while (rootState.parent) rootState = rootState.parent;
+      printHelp(rootState, ui);
+    }
+    return;
+  }
 
   // Sub-command dispatch: if first token matches a sub-command, delegate
   if (argsv[0] && !String(argsv[0]).startsWith('--')) {
     const sub = state.subcommands.find(s => s.name === argsv[0]);
     if (sub) {
-      return runParse(sub.state, argsv.slice(1));
+      return runParse(sub.state, argsv.slice(1), true);
     } else if (state.subcommands.length) {
       // invalid sub-command entered
       const ui = createUi();
@@ -223,6 +246,7 @@ async function runParse(state: DefinitionState, argv?: string[]) {
     }
   }
 
+  // Check for help after subcommand delegation
   if (argsv.includes('--help')) {
     const ui = createUi();
     printHelp(state, ui);
@@ -252,6 +276,11 @@ async function runParse(state: DefinitionState, argv?: string[]) {
       (err as ArgusError).print(ui);
       return;
     }
+    // For argument validation errors, show help
+    if (err instanceof Error && (err.message.includes('Too many arguments') || err.message.includes('Missing argument'))) {
+      printHelp(state, ui);
+      return;
+    }
     throw err;
   }
 }
@@ -271,6 +300,7 @@ function parseArgs(argv: string[], state: DefinitionState) {
   }
 
   const positionalQueue = [...state.positionals];
+  const remainingTokens: string[] = [];
 
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
@@ -281,7 +311,14 @@ function parseArgs(argv: string[], state: DefinitionState) {
       }
       const key = normalizeFlag(matching.flag);
       if (matching.kind === 'booleanOption') {
-        optionsResult[key] = true;
+        // Check if next token is a boolean value
+        const nextToken = argv[i + 1];
+        if (nextToken === 'true' || nextToken === 'false') {
+          optionsResult[key] = nextToken === 'true';
+          i += 1;
+        } else {
+          optionsResult[key] = true;
+        }
       } else {
         const value = argv[i + 1];
         if (value && !value.startsWith('--')) {
@@ -295,6 +332,9 @@ function parseArgs(argv: string[], state: DefinitionState) {
       const nextPos = positionalQueue.shift();
       if (nextPos) {
         positionalsResult[nextPos.name] = token;
+      } else {
+        // This is an extra argument
+        remainingTokens.push(token);
       }
     }
   }
@@ -304,6 +344,11 @@ function parseArgs(argv: string[], state: DefinitionState) {
     if (!(p.name in positionalsResult)) {
       throw new MissingArgumentError(p.name);
     }
+  }
+
+  // Check for too many arguments
+  if (remainingTokens.length > 0) {
+    throw new Error(`Too many arguments provided. Expected ${state.positionals.length}, got ${state.positionals.length + remainingTokens.length}`);
   }
 
   return { positionals: positionalsResult, options: optionsResult };

@@ -4,6 +4,17 @@
   "private": true,
   "description": "A minimal, type-safe, and elegant CLI framework for Node",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/argus-sh/argus-ts"
+  },
+  "keywords": [
+    "cli",
+    "command-line"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

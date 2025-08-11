@@ -12,6 +12,7 @@ const ANSI = {
 };
 
 function wrap(code: string, text: string): string {
+  if (text === '') return '';
   return `${code}${text}${ANSI.reset}`;
 }
 
