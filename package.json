@@ -1,0 +1,23 @@
+{
+  "name": "argus-ts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A minimal, type-safe, and elegant CLI framework for TypeScript (MVP).",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "example:validator": "tsx examples/validator-mvp.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.2",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
+  }
+}
