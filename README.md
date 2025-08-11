@@ -49,7 +49,7 @@ Local (from source):
 Clone the repository:
 
 ```sh
-git clone https://github.com/argus-cli/argus-ts.git
+git clone https://github.com/argus-sh/argus-ts.git
 cd argus-ts
 ```
 
