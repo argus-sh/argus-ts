@@ -57,11 +57,31 @@ export type Colors = {
   cyan: (text: string) => string;
 };
 
+export type SpinnerOptions = {
+  text?: string;
+  color?: (text: string) => string;
+  frames?: string[] | 'dots' | 'dots2' | 'line' | 'pipe' | 'arrow' | 'star' | 'earth' | 'clock';
+  intervalMs?: number;
+  prefix?: string;
+  suffix?: string;
+  succeedIcon?: string;
+  succeedColor?: (text: string) => string;
+  failIcon?: string;
+  failColor?: (text: string) => string;
+};
+
 export type Spinner = {
   start: () => Spinner;
   succeed: (text?: string) => void;
   fail: (text?: string) => void;
   stop: () => void;
+  setText: (text: string) => Spinner;
+  setColor: (color?: (text: string) => string) => Spinner;
+  setFrames: (frames: SpinnerOptions['frames']) => Spinner;
+  setInterval: (intervalMs: number) => Spinner;
+  setPrefix: (prefix?: string) => Spinner;
+  setSuffix: (suffix?: string) => Spinner;
+  update: (options: Partial<SpinnerOptions>) => Spinner;
 };
 
 export type SelectChoice = { title: string; value: string };
@@ -72,7 +92,7 @@ export type SelectOptions = {
 
 export type Ui = {
   colors: Colors;
-  spinner: (text?: string) => Spinner;
+  spinner: (textOrOptions?: string | SpinnerOptions) => Spinner;
   prompt: {
     input: (message: string) => Promise<string>;
     select: (message: string, choices: SelectChoice[], options?: SelectOptions) => Promise<string>;

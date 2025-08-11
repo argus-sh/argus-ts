@@ -8,7 +8,7 @@ export function createUi(): Ui {
   const colors = createColors();
   return {
     colors,
-    spinner: (text?: string) => createSpinner(text, colors),
+    spinner: (textOrOptions?: string | import('../types.js').SpinnerOptions) => createSpinner(textOrOptions as any, colors),
     prompt: {
       input: (message: string) => promptInput(message),
       select: (message: string, choices: SelectChoice[], options?: { highlight?: (text: string) => string; indicatorColor?: (text: string) => string }) => promptSelect(message, choices, options),

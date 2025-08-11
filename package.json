@@ -15,7 +15,8 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "example:validator": "tsx examples/validator-mvp.ts",
     "example:sub": "tsx examples/subcommands.ts",
-    "example:mw": "tsx examples/middleware.ts"
+    "example:mw": "tsx examples/middleware.ts",
+    "example:spinners": "tsx examples/spinners.ts"
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
