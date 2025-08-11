@@ -1,10 +1,10 @@
-import { createChalk, Chalkish } from './colors.js';
+import { createColors, Colors } from './colors.js';
 import { createSpinner, Spinner } from './spinner.js';
 import { drawBox } from './box.js';
 import { promptInput, promptSelect, SelectChoice } from './prompt.js';
 
 export type Ui = {
-  chalk: Chalkish;
+  colors: Colors;
   spinner: (text?: string) => Spinner;
   prompt: {
     input: (message: string) => Promise<string>;
@@ -14,10 +14,10 @@ export type Ui = {
 };
 
 export function createUi(): Ui {
-  const chalk = createChalk();
+  const colors = createColors();
   return {
-    chalk,
-    spinner: (text?: string) => createSpinner(text, chalk),
+    colors,
+    spinner: (text?: string) => createSpinner(text, colors),
     prompt: {
       input: (message: string) => promptInput(message),
       select: (message: string, choices: SelectChoice[], options?: { highlight?: (text: string) => string; indicatorColor?: (text: string) => string }) => promptSelect(message, choices, options),

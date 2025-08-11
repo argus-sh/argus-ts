@@ -1,4 +1,4 @@
-export type Chalkish = {
+export type Colors = {
   bold: (text: string) => string;
   green: (text: string) => string;
   red: (text: string) => string;
@@ -23,7 +23,7 @@ function wrap(code: string, text: string): string {
   return `${code}${text}${ANSI.reset}`;
 }
 
-export function createChalk(): Chalkish {
+export function createColors(): Colors {
   return {
     bold: (t: string) => wrap(ANSI.bold, t),
     green: (t: string) => wrap(ANSI.green, t),

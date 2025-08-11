@@ -6,10 +6,10 @@ const install = app.command('install', 'Instala um pacote.');
 install
   .argument('<packageName>', 'O nome do pacote a instalar.')
   .action((args, _options, { ui }) => {
-    const spinner = ui.spinner(`A instalar ${ui.chalk.green(args.packageName)}...`).start();
+    const spinner = ui.spinner(`A instalar ${ui.colors.green(args.packageName)}...`).start();
     setTimeout(() => {
       spinner.succeed(`Instalado: ${args.packageName}`);
-      ui.box(`O pacote '${ui.chalk.green(args.packageName)}' está pronto.`, 'Sucesso');
+      ui.box(`O pacote '${ui.colors.green(args.packageName)}' está pronto.`, 'Sucesso');
     }, 300);
   });
 
@@ -24,8 +24,8 @@ create
         { title: 'Vue', value: 'vue' }
       ],
       {
-        highlight: (t) => ui.chalk.cyan(t),
-        indicatorColor: (t) => ui.chalk.cyan(t),
+        highlight: (t) => ui.colors.cyan(t),
+        indicatorColor: (t) => ui.colors.cyan(t),
       }
     );
     console.log(`Criando projeto: ${args.projectName} (template: ${template})`);

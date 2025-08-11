@@ -1,4 +1,4 @@
-import type { Chalkish } from './colors.js';
+import type { Colors } from './colors.js';
 
 export type Spinner = {
   start: () => Spinner;
@@ -7,7 +7,7 @@ export type Spinner = {
   stop: () => void;
 };
 
-export function createSpinner(text?: string, chalk?: Chalkish): Spinner {
+export function createSpinner(text?: string, colors?: Colors): Spinner {
   let interval: NodeJS.Timeout | null = null;
   let frame = 0;
   const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -15,7 +15,7 @@ export function createSpinner(text?: string, chalk?: Chalkish): Spinner {
 
   function render() {
     const raw = frames[frame % frames.length] ?? '⠋';
-    const f = chalk ? chalk.cyan(raw) : raw;
+    const f = colors ? colors.cyan(raw) : raw;
     process.stdout.write(`\r${f} ${label}   `);
     frame += 1;
   }
@@ -32,9 +32,9 @@ export function createSpinner(text?: string, chalk?: Chalkish): Spinner {
         clearInterval(interval);
         interval = null;
       }
-      const icon = chalk ? chalk.green('✔') : '✔';
+      const icon = colors ? colors.green('✔') : '✔';
       const message = msg ?? label;
-      const boldMsg = chalk ? chalk.bold(message) : message;
+      const boldMsg = colors ? colors.bold(message) : message;
       process.stdout.write(`\r${icon} ${boldMsg}\n`);
     },
     fail(msg?: string) {
@@ -42,9 +42,9 @@ export function createSpinner(text?: string, chalk?: Chalkish): Spinner {
         clearInterval(interval);
         interval = null;
       }
-      const icon = chalk ? chalk.red('✖') : '✖';
+      const icon = colors ? colors.red('✖') : '✖';
       const message = msg ?? label;
-      const boldMsg = chalk ? chalk.bold(message) : message;
+      const boldMsg = colors ? colors.bold(message) : message;
       process.stdout.write(`\r${icon} ${boldMsg}\n`);
     },
     stop() {

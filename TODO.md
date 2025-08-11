@@ -6,7 +6,7 @@ Argus-TS v1.0 Roadmap (from PRD)
   - Parser dispatches to the selected sub-command; isolated type inference per sub-command
   - Help lists sub-commands
 
-- [ ] F.6 Integrated UI Toolkit
+- [x] F.6 Integrated UI Toolkit
 
   - Provide `ui` in action context with: `chalk`, `spinner(text)`, `prompt(config)`, `box(text)`
   - Add minimal wrappers, wire as optional dependencies
