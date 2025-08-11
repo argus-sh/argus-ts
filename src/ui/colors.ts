@@ -1,12 +1,4 @@
-export type Colors = {
-  bold: (text: string) => string;
-  green: (text: string) => string;
-  red: (text: string) => string;
-  yellow: (text: string) => string;
-  blue: (text: string) => string;
-  magenta: (text: string) => string;
-  cyan: (text: string) => string;
-};
+import type { Colors } from '../types.js';
 
 const ANSI = {
   reset: '\x1b[0m',

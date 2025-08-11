@@ -1,4 +1,4 @@
-import type { Colors } from './colors.js';
+import type { Colors } from '../types.js';
 
 export type Spinner = {
   start: () => Spinner;

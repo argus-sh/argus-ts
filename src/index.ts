@@ -1,60 +1,23 @@
-export type CliConfig = {
-  name: string;
-  description?: string;
-};
+import type {
+  CliConfig,
+  ExtractAngleName,
+  NormalizeFlag,
+  PositionalArgDefinition,
+  BooleanOptionDefinition,
+  ValueOptionDefinition,
+  AnyOptionDefinition,
+  PositionalArgsShape,
+  OptionsShape,
+  Ui,
+  ActionContext,
+  ActionHandler,
+  MiddlewareContext,
+  Middleware,
+  CliBuilder,
+  CliExecutor,
+} from './types';
 
-type PositionalArgDefinition<Name extends string> = {
-  kind: 'positional';
-  name: Name; // e.g. "file"
-  description?: string;
-};
-
-type BooleanOptionDefinition<Flag extends string> = {
-  kind: 'booleanOption';
-  flag: Flag; // e.g. "--strict"
-  description?: string;
-  defaultValue?: boolean;
-};
-
-type ValueOptionDefinition<Flag extends string, ValueName extends string> = {
-  kind: 'valueOption';
-  flag: Flag; // e.g. "--level"
-  valueName: ValueName; // e.g. "value"
-  description?: string;
-  defaultValue?: string;
-};
-
-type AnyOptionDefinition = BooleanOptionDefinition<string> | ValueOptionDefinition<string, string>;
-
-type ExtractAngleName<T extends string> = T extends `<${infer Inner}>` ? Inner : never;
-
-// Build the positional args object type incrementally
-type PositionalArgsShape<Defs extends readonly PositionalArgDefinition<string>[]> = {
-  [K in Defs[number] as K['name']]: string;
-};
-
-// Build the options object type incrementally
-type OptionsShape<Defs extends readonly AnyOptionDefinition[]> = {
-  [K in Defs[number] as NormalizeFlag<K['flag']>] : K extends BooleanOptionDefinition<string>
-    ? boolean
-    : K extends ValueOptionDefinition<string, string>
-      ? string
-      : never;
-};
-
-type NormalizeFlag<T extends string> = T extends `--${infer Name}` ? Name : T;
-
-import { createUi, Ui } from './ui/index.js';
-
-export type ActionContext = { ui: Ui };
-export type ActionHandler<Args, Opts> = (args: Args, options: Opts, context: ActionContext) => void | Promise<void>;
-export type MiddlewareContext = {
-  args: any;
-  options: any;
-  ui: Ui;
-  commandPath: string[];
-};
-export type Middleware = (context: MiddlewareContext, next: () => Promise<void>) => void | Promise<void>;
+import { createUi } from './ui/index';
 
 // Internals to hold definitions
 class DefinitionState {
@@ -71,32 +34,7 @@ class DefinitionState {
   ) {}
 }
 
-export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[], OptDefs extends readonly AnyOptionDefinition[]> = {
-  command<Name extends string>(name: Name, description?: string): CliBuilder<[], []>;
-  use(middleware: Middleware): CliBuilder<PosDefs, OptDefs>;
-
-  argument<NameSpec extends `<${string}>`>(name: NameSpec, description?: string): CliBuilder<
-    [...PosDefs, PositionalArgDefinition<ExtractAngleName<NameSpec>>],
-    OptDefs
-  >;
-
-  option<FlagSpec extends `--${string}`>(flag: FlagSpec, description?: string, config?: { defaultValue?: boolean }): CliBuilder<
-    PosDefs,
-    [...OptDefs, BooleanOptionDefinition<FlagSpec>]
-  >;
-
-  option<FlagSpec extends `--${string}`, ValueSpec extends `<${string}>`>(flag: FlagSpec, description: string, config: { defaultValue?: string } & { valueName?: ValueSpec }): CliBuilder<
-    PosDefs,
-    [...OptDefs, ValueOptionDefinition<FlagSpec, ExtractAngleName<ValueSpec>>]
-  >;
-
-  action(handler: ActionHandler<PositionalArgsShape<PosDefs>, OptionsShape<OptDefs>>): CliExecutor;
-  parse(argv?: string[]): void | Promise<void>;
-};
-
-export type CliExecutor = {
-  parse(argv?: string[]): void | Promise<void>;
-};
+export type { CliBuilder, CliExecutor };
 
 export function cli(config: CliConfig): CliBuilder<[], []> {
   const state = new DefinitionState(config, [config.name]);

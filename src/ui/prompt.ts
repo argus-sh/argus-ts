@@ -1,10 +1,5 @@
 import readline from 'node:readline';
-
-export type SelectChoice = { title: string; value: string };
-export type SelectOptions = {
-  highlight?: (text: string) => string;
-  indicatorColor?: (text: string) => string;
-};
+import type { SelectChoice, SelectOptions } from '../types.js';
 
 export async function promptInput(message: string): Promise<string> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
