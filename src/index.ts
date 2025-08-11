@@ -119,47 +119,91 @@ function createBuilder(state: DefinitionState) {
   return b as CliBuilder<any, any>;
 }
 
-function printHelp(state: DefinitionState) {
+function printHelp(state: DefinitionState, ui?: Ui) {
+  const colors = ui?.colors;
+  const colorize = {
+    title: (s: string) => (colors ? colors.bold(s) : s),
+    section: (s: string) => (colors ? colors.cyan(s) : s),
+    usageLabel: (s: string) => (colors ? colors.blue(s) : s),
+    cmd: (s: string) => (colors ? colors.green(s) : s),
+    arg: (s: string) => (colors ? colors.yellow(s) : s),
+    opt: (s: string) => (colors ? colors.cyan(s) : s),
+    dim: (s: string) => (s),
+  };
+
   const lines: string[] = [];
-  lines.push(`${state.commandPath.join(' ')}`);
+  lines.push(colorize.title(state.commandPath.join(' ')));
   if (state.config.description) lines.push(state.config.description);
   lines.push('');
+
+  // Usage
   const usageParts: string[] = [...state.commandPath];
-  if (state.subcommands.length) usageParts.push('<command>');
-  for (const p of state.positionals) usageParts.push(`<${p.name}>`);
+  if (state.subcommands.length) usageParts.push(colorize.arg('<command>'));
+  for (const p of state.positionals) usageParts.push(colorize.arg(`<${p.name}>`));
   for (const o of state.options) {
-    if (o.kind === 'booleanOption') usageParts.push(`[${o.flag}]`);
-    if (o.kind === 'valueOption') usageParts.push(`[${o.flag} <${o.valueName}>]`);
+    if (o.kind === 'booleanOption') usageParts.push(colorize.opt(`[${o.flag}]`));
+    else usageParts.push(colorize.opt(`[${o.flag} ${colorize.arg(`<${o.valueName}>`)}]`));
   }
-  lines.push(`Usage: ${usageParts.join(' ')}`);
+  lines.push(`${colorize.usageLabel('Usage:')} ${usageParts.join(' ')}`);
   lines.push('');
+
+  // Commands
   if (state.subcommands.length) {
-    lines.push('Commands:');
+    lines.push(colorize.section('Commands:'));
+    const names = state.subcommands.map(c => c.name);
+    const nameWidth = Math.max(...names.map(n => n.length));
     for (const c of state.subcommands) {
-      lines.push(`  ${c.name}  ${c.description ?? ''}`.trimEnd());
+      const left = colorize.cmd(c.name.padEnd(nameWidth));
+      const right = c.description ?? '';
+      lines.push(`  ${left}  ${right}`.trimEnd());
     }
     lines.push('');
   }
+
+  // Arguments
   if (state.positionals.length) {
-    lines.push('Arguments:');
+    lines.push(colorize.section('Arguments:'));
+    const names = state.positionals.map(p => `<${p.name}>`);
+    const nameWidth = Math.max(...names.map(n => n.length));
     for (const p of state.positionals) {
-      lines.push(`  <${p.name}>  ${p.description ?? ''}`.trimEnd());
+      const left = colorize.arg(`<${p.name}>`.padEnd(nameWidth));
+      const right = p.description ?? '';
+      lines.push(`  ${left}  ${right}`.trimEnd());
     }
     lines.push('');
   }
-  if (state.options.length) {
-    lines.push('Options:');
-    for (const o of state.options) {
-      if (o.kind === 'booleanOption') {
-        const def = o.defaultValue !== undefined ? ` (default: ${o.defaultValue})` : '';
-        lines.push(`  ${o.flag}  ${o.description ?? ''}${def}`.trimEnd());
-      } else {
-        const def = o.defaultValue !== undefined ? ` (default: ${o.defaultValue})` : '';
-        lines.push(`  ${o.flag} <${o.valueName}>  ${o.description ?? ''}${def}`.trimEnd());
-      }
+
+  // Options (include built-in --help)
+  lines.push(colorize.section('Options:'));
+  const optionRows: { left: string; right: string }[] = [];
+  for (const o of state.options) {
+    if (o.kind === 'booleanOption') {
+      const def = o.defaultValue !== undefined ? ` (default: ${o.defaultValue})` : '';
+      optionRows.push({ left: colorize.opt(o.flag), right: `${o.description ?? ''}${def}`.trim() });
+    } else {
+      const def = o.defaultValue !== undefined ? ` (default: ${o.defaultValue})` : '';
+      optionRows.push({ left: colorize.opt(`${o.flag} ${colorize.arg(`<${o.valueName}>`)}`), right: `${o.description ?? ''}${def}`.trim() });
     }
   }
+  optionRows.push({ left: colorize.opt('--help'), right: 'Show help' });
+  const leftWidth = Math.max(...optionRows.map(r => stripAnsiLike(r.left).length));
+  for (const r of optionRows) {
+    const paddedLeft = padAnsiLike(r.left, leftWidth);
+    lines.push(`  ${paddedLeft}  ${r.right}`.trimEnd());
+  }
+
   console.log(lines.join('\n'));
+}
+
+// Minimal ANSI-aware padding for our color codes
+function stripAnsiLike(input: string): string {
+  // eslint-disable-next-line no-control-regex
+  return input.replace(/\u001b\[[0-9;]*m/g, '');
+}
+function padAnsiLike(input: string, targetWidth: number): string {
+  const visible = stripAnsiLike(input);
+  const pad = Math.max(0, targetWidth - visible.length);
+  return input + ' '.repeat(pad);
 }
 
 async function runParse(state: DefinitionState, argv?: string[]) {
@@ -174,13 +218,15 @@ async function runParse(state: DefinitionState, argv?: string[]) {
   }
 
   if (argsv.includes('--help')) {
-    printHelp(state);
+    const ui = createUi();
+    printHelp(state, ui);
     return;
   }
 
   // If there are sub-commands but none selected and no handler, show help
   if (state.subcommands.length > 0 && !state.handler && (!argsv.length || (typeof argsv[0] === 'string' && argsv[0].startsWith('--')))) {
-    printHelp(state);
+    const ui = createUi();
+    printHelp(state, ui);
     return;
   }
 
