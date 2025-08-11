@@ -17,8 +17,8 @@ import type {
   CliExecutor,
 } from './types';
 
-import { createUi } from './ui/index';
-import { ArgusError, InvalidSubcommandError, MissingArgumentError, MissingOptionValueError, UnknownOptionError } from './errors';
+import { createUi } from './ui/index.js';
+import { ArgusError, InvalidSubcommandError, MissingArgumentError, MissingOptionValueError, UnknownOptionError } from './errors/index.js';
 
 // Internals to hold definitions
 class DefinitionState {

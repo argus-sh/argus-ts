@@ -6,12 +6,21 @@
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage",
     "example:validator": "tsx examples/validator-mvp.ts",
@@ -21,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
+    "rimraf": "^5.0.10",
     "@vitest/coverage-v8": "^2.1.9",
     "tsx": "^4.16.2",
     "typescript": "^5.5.4",

@@ -1,4 +1,4 @@
-<h1 align="center">Argus-TS</h1>
+<h1 align="center">Argus-TS (v1)</h1>
 
 <p align="center">
 <strong>A minimal, type-safe, and elegant CLI framework for TypeScript.</strong>
@@ -7,51 +7,75 @@
 <img src="https://img.shields.io/badge/License-MIT-teal.svg" alt="License: MIT">
 </a>
 <a href="#">
-<img src="https://img.shields.io/badge/Version-0.1.0 (MVP)-blueviolet.svg" alt="Version">
-</a>
+<img src="https://img.shields.io/badge/Version-1.0.0%20(Stable)-blueviolet.svg" alt="Version">
+\</a>
 <a href="#">
 <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
 </a>
 </p>
 
-Argus-TS is a new framework designed to make building command-line interfaces (CLIs) in TypeScript a breeze, with a primary focus on automatic type inference. This MVP (Minimum Viable Product) proves the core concept: defining commands and accessing their arguments and options with guaranteed type safety, right out of the box.
+Argus-TS is a framework to build CLIs in TypeScript with automatic, end‑to‑end type inference. Version 1.0 brings sub‑commands, middleware, an internal UI toolkit (colors, spinners, prompts, boxes), advanced help, and first‑class error handling.
 
-✨ Core Features (MVP)
-Fluent API: Define your CLI structure in a clear, chainable, and intuitive way.
+### Build
 
-Automatic Type Inference: Enjoy fully typed args and options in your action handlers without any manual type annotations.
+To produce an ESM build with type declarations:
 
-Zero Dependencies: The core library has no production dependencies, keeping it fast and lightweight.
+```sh
+npm run build
+```
 
-Simple Help Generation: Automatically generates basic help text when the --help flag is used.
+This outputs the compiled JS and d.ts files to `dist/` and sets `exports`/`types` for Node ESM consumers.
 
-🚀 Installation
-As this is an early stage MVP, the primary way to use it is by cloning the repository.
+### ✨ Core Features (v1)
+
+- Fluent, chainable API
+- Automatic type inference (args/options → action types)
+- Sub‑commands with isolated types
+- Middleware pipeline (`.use()`) with `ctx` and `next()`
+- Built‑in UI toolkit (colors, spinners, prompts, boxes) without external deps
+- Advanced `--help` output (sections, colors, aligned)
+- Rich, colored Argus errors with codes and hints
+
+### 🚀 Installation
+
+Use as a library (after publish):
+
+```sh
+npm install argus-ts
+```
+
+Local (from source):
 
 Clone the repository:
+
 ```sh
 git clone https://github.com/argus-cli/argus-ts.git
 cd argus-ts
 ```
+
 Install development dependencies:
+
 ```sh
 npm install
 ```
 
-⚡ Quick Start
-Here's how simple it is to create a powerful, type-safe CLI with Argus-TS.
+### ⚡ Quick Start
+
+Create a powerful, type‑safe CLI in a few lines.
 
 ```ts
 // examples/basic-cli.ts
-import { cli } from './src/index';
+import { cli } from "argus-ts";
 
 cli({
-  name: 'greet-cli',
-  description: 'A simple demonstration of the Argus-TS MVP.',
+  name: "greet-cli",
+  description: "A simple demonstration of the Argus-TS MVP.",
 })
-  .argument('<user>', 'The username to greet.')
-  .option('--greeting <word>', 'The word to use for the greeting.', { defaultValue: 'Hello' })
-  .option('--loud', 'Should the greeting be loud?', { defaultValue: false })
+  .argument("<user>", "The username to greet.")
+  .option("--greeting <word>", "The word to use for the greeting.", {
+    defaultValue: "Hello",
+  })
+  .option("--loud", "Should the greeting be loud?", { defaultValue: false })
   .action((args, options) => {
     // `args.user` is automatically typed as `string`
     // `options.greeting` is automatically typed as `string`
@@ -65,8 +89,11 @@ cli({
   })
   .parse();
 ```
-Running the Example
+
+### Running the Example
+
 To run the example script using tsx (a tool for direct TypeScript execution):
+
 ```sh
 npx tsx examples/basic-cli.ts World --greeting "Howdy" --loud
 
@@ -74,14 +101,103 @@ Output:
 
 HOWDY, WORLD!
 ```
-🤝 Contributing
-This is an early-stage project, and we welcome all forms of contribution! The best way to help right now is by:
 
-Trying out the MVP and providing feedback.
+### Sub‑commands
 
-Reporting bugs or suggesting new features by opening an issue.
+```ts
+import { cli } from "argus-ts";
 
-Improving the documentation.
+const app = cli({
+  name: "installer",
+  description: "A modern package manager.",
+});
+
+const install = app.command("install", "Install a package");
+install.argument("<pkg>", "Package name");
+install.action(({ pkg }) => {
+  console.log(`Installing ${pkg}...`);
+});
+
+const create = app.command("create", "Scaffold a project");
+create.argument("<name>");
+create.action(({ name }) => console.log(`Creating ${name}...`));
+
+app.parse();
+```
+
+### Middleware
+
+```ts
+import { cli } from "argus-ts";
+
+const app = cli({ name: "secure" });
+
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  console.log(`Done in ${Date.now() - start}ms`);
+});
+
+app
+  .argument("<file>")
+  .action(async (args, _options, { ui }) => {
+    const sp = ui
+      .spinner({
+        text: `Processing ${ui.colors.green(args.file)}`,
+        frames: "dots2",
+      })
+      .start();
+    await new Promise((r) => setTimeout(r, 300));
+    sp.succeed("Processed");
+  })
+  .parse();
+```
+
+### UI Toolkit (Spinners, Prompts, Boxes, Colors)
+
+```ts
+import { cli } from "argus-ts";
+
+cli({ name: "ui-demo" })
+  .action(async (_args, _opts, { ui }) => {
+    ui.box(ui.colors.bold("Welcome to Argus-TS"), "Hello");
+
+    const sp = ui
+      .spinner({ text: "Working", frames: "arrow", color: ui.colors.cyan })
+      .start();
+    await new Promise((r) => setTimeout(r, 250));
+    sp.setFrames("pipe").setText("Almost there");
+    await new Promise((r) => setTimeout(r, 250));
+    sp.succeed("Done");
+
+    const choice = await ui.prompt.select(
+      "Pick one:",
+      [
+        { title: "React", value: "react" },
+        { title: "Vue", value: "vue" },
+      ],
+      {
+        highlight: ui.colors.cyan,
+        indicatorColor: ui.colors.cyan,
+      }
+    );
+    console.log(`You chose ${choice}`);
+  })
+  .parse();
+```
+
+### Advanced Help & Errors
+
+- `--help` prints colored, aligned sections (Commands, Arguments, Options)
+- Friendly, colored errors with codes (e.g. `E_UNKNOWN_OPTION`, `E_MISSING_ARGUMENT`) and hints
+
+### 🤝 Contributing
+
+We welcome all contributions! Great ways to help:
+
+- Try the v1 and provide feedback
+- Report bugs or open feature requests
+- Improve docs and examples
 
 📄 License
 This project is licensed under the MIT License. See the LICENSE file for details.
