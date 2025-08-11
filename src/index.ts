@@ -44,7 +44,10 @@ type OptionsShape<Defs extends readonly AnyOptionDefinition[]> = {
 
 type NormalizeFlag<T extends string> = T extends `--${infer Name}` ? Name : T;
 
-export type ActionHandler<Args, Opts> = (args: Args, options: Opts) => void | Promise<void>;
+import { createUi, Ui } from './ui/index.js';
+
+export type ActionContext = { ui: Ui };
+export type ActionHandler<Args, Opts> = (args: Args, options: Opts, context: ActionContext) => void | Promise<void>;
 
 // Internals to hold definitions
 class DefinitionState {
@@ -226,7 +229,8 @@ async function runParse(state: DefinitionState, argv?: string[]) {
 
   const { positionals, options } = parseArgs(argsv, state);
   if (state.handler) {
-    await state.handler(positionals, options);
+    const context: ActionContext = { ui: createUi() };
+    await state.handler(positionals, options, context);
   }
 }
 
