@@ -6,3 +6,5 @@ dist
 .env.test.local
 .env.production.local
 PRD.md
+TODO.md
+coverage/
