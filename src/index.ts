@@ -18,6 +18,7 @@ import type {
 } from './types';
 
 import { createUi } from './ui/index';
+import { ArgusError, InvalidSubcommandError, MissingArgumentError, MissingOptionValueError, UnknownOptionError } from './errors';
 
 // Internals to hold definitions
 class DefinitionState {
@@ -214,6 +215,11 @@ async function runParse(state: DefinitionState, argv?: string[]) {
     const sub = state.subcommands.find(s => s.name === argsv[0]);
     if (sub) {
       return runParse(sub.state, argsv.slice(1));
+    } else if (state.subcommands.length) {
+      // invalid sub-command entered
+      const ui = createUi();
+      new InvalidSubcommandError(String(argsv[0]), state.subcommands.map(s => s.name)).print(ui);
+      return;
     }
   }
 
@@ -230,14 +236,23 @@ async function runParse(state: DefinitionState, argv?: string[]) {
     return;
   }
 
-  const { positionals, options } = parseArgs(argsv, state);
-  if (state.handler) {
+  try {
+    const { positionals, options } = parseArgs(argsv, state);
+    if (state.handler) {
+      const ui = createUi();
+      const chain = collectMiddlewares(state);
+      const context: MiddlewareContext = { args: positionals, options, ui, commandPath: state.commandPath };
+      await runMiddlewares(chain, context, async () => {
+        await state.handler!(positionals, options, { ui });
+      });
+    }
+  } catch (err) {
     const ui = createUi();
-    const chain = collectMiddlewares(state);
-    const context: MiddlewareContext = { args: positionals, options, ui, commandPath: state.commandPath };
-    await runMiddlewares(chain, context, async () => {
-      await state.handler!(positionals, options, { ui });
-    });
+    if (ArgusError.isArgusError(err)) {
+      (err as ArgusError).print(ui);
+      return;
+    }
+    throw err;
   }
 }
 
@@ -262,7 +277,7 @@ function parseArgs(argv: string[], state: DefinitionState) {
     if (typeof token === 'string' && token.startsWith('--')) {
       const matching = state.options.find(o => o.flag === token);
       if (!matching) {
-        continue; // unknown flags are ignored in MVP
+        throw new UnknownOptionError(token);
       }
       const key = normalizeFlag(matching.flag);
       if (matching.kind === 'booleanOption') {
@@ -272,6 +287,8 @@ function parseArgs(argv: string[], state: DefinitionState) {
         if (value && !value.startsWith('--')) {
           optionsResult[key] = value;
           i += 1;
+        } else {
+          throw new MissingOptionValueError(matching.flag, matching.valueName);
         }
       }
     } else if (typeof token === 'string') {
@@ -285,7 +302,7 @@ function parseArgs(argv: string[], state: DefinitionState) {
   // Minimal validation: ensure all required positionals are present
   for (const p of state.positionals) {
     if (!(p.name in positionalsResult)) {
-      throw new Error(`Missing required argument: <${p.name}>`);
+      throw new MissingArgumentError(p.name);
     }
   }
 
