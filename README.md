@@ -16,14 +16,6 @@
 
 Argus-TS is a framework to build CLIs in TypeScript with automatic, end‑to‑end type inference. Version 1.0 brings sub‑commands, middleware, an internal UI toolkit (colors, spinners, prompts, boxes), advanced help, and first‑class error handling.
 
-### Build
-
-To produce an ESM build with type declarations:
-
-```sh
-npm run build
-```
-
 This outputs the compiled JS and d.ts files to `dist/` and sets `exports`/`types` for Node ESM consumers.
 
 ### ✨ Core Features (v1)
@@ -69,7 +61,7 @@ import { cli } from "argus-ts";
 
 cli({
   name: "greet-cli",
-  description: "A simple demonstration of the Argus-TS MVP.",
+  description: "A simple demonstration of the Argus-TS.",
 })
   .argument("<user>", "The username to greet.")
   .option("--greeting <word>", "The word to use for the greeting.", {
