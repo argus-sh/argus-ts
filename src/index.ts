@@ -48,6 +48,13 @@ import { createUi, Ui } from './ui/index.js';
 
 export type ActionContext = { ui: Ui };
 export type ActionHandler<Args, Opts> = (args: Args, options: Opts, context: ActionContext) => void | Promise<void>;
+export type MiddlewareContext = {
+  args: any;
+  options: any;
+  ui: Ui;
+  commandPath: string[];
+};
+export type Middleware = (context: MiddlewareContext, next: () => Promise<void>) => void | Promise<void>;
 
 // Internals to hold definitions
 class DefinitionState {
@@ -55,15 +62,18 @@ class DefinitionState {
   public readonly options: AnyOptionDefinition[] = [];
   public readonly subcommands: { name: string; description?: string; state: DefinitionState; builder: any }[] = [];
   public handler?: ActionHandler<any, any>;
+  public readonly middlewares: Middleware[] = [];
 
   constructor(
     public readonly config: CliConfig,
-    public readonly commandPath: string[]
+    public readonly commandPath: string[],
+    public readonly parent?: DefinitionState
   ) {}
 }
 
 export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[], OptDefs extends readonly AnyOptionDefinition[]> = {
   command<Name extends string>(name: Name, description?: string): CliBuilder<[], []>;
+  use(middleware: Middleware): CliBuilder<PosDefs, OptDefs>;
 
   argument<NameSpec extends `<${string}>`>(name: NameSpec, description?: string): CliBuilder<
     [...PosDefs, PositionalArgDefinition<ExtractAngleName<NameSpec>>],
@@ -93,10 +103,15 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
 
   const builder: any = {
     command(name: string, description?: string) {
-      const childState = new DefinitionState(state.config, [...state.commandPath, name]);
+      const childState = new DefinitionState(state.config, [...state.commandPath, name], state);
       const childBuilder = createBuilder(childState);
       state.subcommands.push({ name, description, state: childState, builder: childBuilder });
       return childBuilder;
+    },
+
+    use(middleware: Middleware) {
+      state.middlewares.push(middleware);
+      return builder as CliBuilder<any, any>;
     },
 
     argument<NameSpec extends `<${string}>`>(name: NameSpec, description?: string) {
@@ -132,10 +147,14 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
 function createBuilder(state: DefinitionState) {
   const b: any = {
     command(name: string, description?: string) {
-      const childState = new DefinitionState(state.config, [...state.commandPath, name]);
+      const childState = new DefinitionState(state.config, [...state.commandPath, name], state);
       const childBuilder = createBuilder(childState);
       state.subcommands.push({ name, description, state: childState, builder: childBuilder });
       return childBuilder;
+    },
+    use(middleware: Middleware) {
+      state.middlewares.push(middleware);
+      return b;
     },
     argument(name: string, description?: string) {
       const argName = name.slice(1, -1);
@@ -229,8 +248,12 @@ async function runParse(state: DefinitionState, argv?: string[]) {
 
   const { positionals, options } = parseArgs(argsv, state);
   if (state.handler) {
-    const context: ActionContext = { ui: createUi() };
-    await state.handler(positionals, options, context);
+    const ui = createUi();
+    const chain = collectMiddlewares(state);
+    const context: MiddlewareContext = { args: positionals, options, ui, commandPath: state.commandPath };
+    await runMiddlewares(chain, context, async () => {
+      await state.handler!(positionals, options, { ui });
+    });
   }
 }
 
@@ -287,6 +310,35 @@ function parseArgs(argv: string[], state: DefinitionState) {
 
 function normalizeFlag(flag: string): string {
   return flag.startsWith('--') ? flag.slice(2) : flag;
+}
+
+function collectMiddlewares(state: DefinitionState): Middleware[] {
+  const list: Middleware[] = [];
+  // collect from root to current for intuitive order (root first, leaf last)
+  const stack: DefinitionState[] = [];
+  let cur: DefinitionState | undefined = state;
+  while (cur) {
+    stack.push(cur);
+    cur = cur.parent;
+  }
+  stack.reverse().forEach(s => {
+    list.push(...s.middlewares);
+  });
+  return list;
+}
+
+async function runMiddlewares(middlewares: Middleware[], context: MiddlewareContext, finalNext: () => Promise<void>): Promise<void> {
+  let index = -1;
+  async function dispatch(i: number): Promise<void> {
+    if (i <= index) throw new Error('next() called multiple times');
+    index = i;
+    const fn = middlewares[i];
+    if (!fn) {
+      return finalNext();
+    }
+    await fn(context, () => dispatch(i + 1));
+  }
+  await dispatch(0);
 }
 
 

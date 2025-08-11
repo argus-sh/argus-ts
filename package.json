@@ -14,7 +14,8 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "example:validator": "tsx examples/validator-mvp.ts",
-    "example:sub": "tsx examples/subcommands.ts"
+    "example:sub": "tsx examples/subcommands.ts",
+    "example:mw": "tsx examples/middleware.ts"
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
