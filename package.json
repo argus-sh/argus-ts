@@ -1,6 +1,6 @@
 {
   "name": "argus-ts",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A minimal, type-safe, and elegant CLI framework for Node",
   "license": "MIT",
   "publishConfig": {
@@ -20,9 +20,9 @@
   "types": "dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     }
   },
   "files": [
