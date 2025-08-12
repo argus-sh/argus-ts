@@ -63,14 +63,14 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
       // Support composite flag declaration like "--config <file>"
       const composite = flag.match(/^(--[A-Za-z0-9_-]+)\s+<([^>]+)>$/);
       if (composite) {
-        const baseFlag = composite[1];
-        const valueName = composite[2];
+        const baseFlag = composite[1] as string;
+        const valueName = composite[2] as string;
         state.options.push({
           kind: 'valueOption',
-          flag: baseFlag,
+          flag: baseFlag as string,
           description,
           defaultValue: (config as any)?.defaultValue as string | undefined,
-          valueName,
+          valueName: valueName as string,
         });
         return builder as CliBuilder<any, any>;
       }
@@ -117,14 +117,14 @@ function createBuilder(state: DefinitionState) {
     option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
       const composite = flag.match(/^(--[A-Za-z0-9_-]+)\s+<([^>]+)>$/);
       if (composite) {
-        const baseFlag = composite[1];
-        const valueName = composite[2];
+        const baseFlag = composite[1] as string;
+        const valueName = composite[2] as string;
         state.options.push({
           kind: 'valueOption',
-          flag: baseFlag,
+          flag: baseFlag as string,
           description,
           defaultValue: (config as any)?.defaultValue as string | undefined,
-          valueName,
+          valueName: valueName as string,
         });
         return b;
       }
