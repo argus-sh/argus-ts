@@ -316,7 +316,7 @@ async function runParse(state: DefinitionState, argv?: string[], isDelegated: bo
 
 function parseArgs(argv: string[], state: DefinitionState) {
   const positionalsResult: Record<string, string> = {};
-  const optionsResult: Record<string, boolean | string> = {};
+  const optionsResult: Record<string, boolean | string | number> = {};
 
   // Initialize defaults
   for (const o of state.options) {
