@@ -42,15 +42,24 @@ export type BooleanOptionDefinition<Flag extends string> = {
   defaultValue?: boolean;
 };
 
-export type ValueOptionDefinition<Flag extends string, ValueName extends string> = {
+export type ValueOptionDefinition<
+  Flag extends string,
+  ValueName extends string,
+  ValueType extends 'string' | 'number' = 'string'
+> = {
   kind: 'valueOption';
   flag: Flag;
   valueName: ValueName;
   description?: string;
-  defaultValue?: string;
+  // defaultValue aligns with the selected valueType; kept generic to support inference
+  defaultValue?: ValueType extends 'number' ? number : string;
+  // valueType indicates how the parser should coerce the string input
+  valueType?: ValueType;
 };
 
-export type AnyOptionDefinition = BooleanOptionDefinition<string> | ValueOptionDefinition<string, string>;
+export type AnyOptionDefinition =
+  | BooleanOptionDefinition<string>
+  | ValueOptionDefinition<string, string, 'string' | 'number'>;
 
 export type PositionalArgsShape<Defs extends readonly PositionalArgDefinition<string>[]> = {
   [K in Defs[number] as K['name']]: string;
@@ -59,8 +68,8 @@ export type PositionalArgsShape<Defs extends readonly PositionalArgDefinition<st
 export type OptionsShape<Defs extends readonly AnyOptionDefinition[]> = {
   [K in Defs[number] as NormalizeFlag<K['flag']>] : K extends BooleanOptionDefinition<string>
     ? boolean
-    : K extends ValueOptionDefinition<string, string>
-      ? string
+    : K extends ValueOptionDefinition<string, string, infer VT>
+      ? (VT extends 'number' ? number : string)
       : never;
 };
 
@@ -154,7 +163,13 @@ export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[
   // Value option with explicit valueName in config
   option<FlagSpec extends `--${string}`, ValueSpec extends `<${string}>`>(flag: FlagSpec, description: string, config: { defaultValue?: string } & { valueName?: ValueSpec }): CliBuilder<
     PosDefs,
-    [...OptDefs, ValueOptionDefinition<FlagSpec, ExtractAngleName<ValueSpec>>]
+    [...OptDefs, ValueOptionDefinition<FlagSpec, ExtractAngleName<ValueSpec>, 'string'>]
+  >;
+
+  // Numeric value option (typed number)
+  option<FlagSpec extends `--${string}`, ValueSpec extends `<${string}>`>(flag: FlagSpec, description: string, config: { defaultValue?: number } & { valueName?: ValueSpec } & { valueType: 'number' }): CliBuilder<
+    PosDefs,
+    [...OptDefs, ValueOptionDefinition<FlagSpec, ExtractAngleName<ValueSpec>, 'number'>]
   >;
 
   action(handler: ActionHandler<PositionalArgsShape<PosDefs>, OptionsShape<OptDefs>>): CliExecutor;

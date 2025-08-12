@@ -117,6 +117,43 @@ create.action(({ name }) => console.log(`Creating ${name}...`));
 app.parse();
 ```
 
+### Typed Options (string and number)
+
+By default, value options are typed as strings. You can also declare a numeric option and the parser will coerce the provided value to a number.
+
+```ts
+import { cli } from "argus-ts";
+
+cli({ name: "numbers" })
+  // Composite flag syntax is supported:
+  // `--count <n>` in the flag string renders correctly in help and usage
+  .option("--count <n>", "How many times?", {
+    valueType: "number",
+    defaultValue: 0,
+  })
+  // You can also use explicit valueName in config (equivalent typing):
+  // .option("--count", "How many times?", { valueName: '<n>', valueType: 'number', defaultValue: 0 })
+  .action((_args, options) => {
+    // options.count is inferred as number
+    console.log(options.count + 1);
+  })
+  .parse();
+```
+
+Usage examples:
+
+```bash
+# Pass numeric value; options.count will be a number
+node index.js --count 7
+
+# Help shows placeholders
+node index.js --help
+# ...
+# Usage: numbers [--count <n>]
+# Options:
+#   --count <n>  How many times? (default: 0)
+```
+
 ### Middleware
 
 ```ts

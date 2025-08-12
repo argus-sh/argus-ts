@@ -59,7 +59,7 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
       return builder as CliBuilder<any, any>;
     },
 
-    option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
+    option(flag: string, description?: string, config?: { defaultValue?: boolean | string | number; valueName?: `<${string}>`; valueType?: 'string' | 'number' }) {
       // Support composite flag declaration like "--config <file>"
       const composite = flag.match(/^(--[A-Za-z0-9_-]+)\s+<([^>]+)>$/);
       if (composite) {
@@ -69,14 +69,15 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
           kind: 'valueOption',
           flag: baseFlag as string,
           description,
-          defaultValue: (config as any)?.defaultValue as string | undefined,
+          defaultValue: (config as any)?.defaultValue as any,
           valueName: valueName as string,
+          valueType: (config as any)?.valueType as any,
         });
         return builder as CliBuilder<any, any>;
       }
       if (config && config.valueName) {
         const valueName = config.valueName.slice(1, -1);
-        state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue as string | undefined, valueName });
+        state.options.push({ kind: 'valueOption', flag, description, defaultValue: (config as any)?.defaultValue as any, valueName, valueType: (config as any)?.valueType as any });
       } else {
         state.options.push({ kind: 'booleanOption', flag, description, defaultValue: (config as any)?.defaultValue as boolean | undefined });
       }
@@ -114,7 +115,7 @@ function createBuilder(state: DefinitionState) {
       state.positionals.push({ kind: 'positional', name: argName, description });
       return b;
     },
-    option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
+    option(flag: string, description?: string, config?: { defaultValue?: boolean | string | number; valueName?: `<${string}>`; valueType?: 'string' | 'number' }) {
       const composite = flag.match(/^(--[A-Za-z0-9_-]+)\s+<([^>]+)>$/);
       if (composite) {
         const baseFlag = composite[1] as string;
@@ -123,14 +124,15 @@ function createBuilder(state: DefinitionState) {
           kind: 'valueOption',
           flag: baseFlag as string,
           description,
-          defaultValue: (config as any)?.defaultValue as string | undefined,
+          defaultValue: (config as any)?.defaultValue as any,
           valueName: valueName as string,
+          valueType: (config as any)?.valueType as any,
         });
         return b;
       }
       if (config && config.valueName) {
         const valueName = config.valueName.slice(1, -1);
-        state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue as string | undefined, valueName });
+        state.options.push({ kind: 'valueOption', flag, description, defaultValue: (config as any)?.defaultValue as any, valueName, valueType: (config as any)?.valueType as any });
       } else {
         state.options.push({ kind: 'booleanOption', flag, description, defaultValue: (config as any)?.defaultValue as boolean | undefined });
       }
@@ -349,7 +351,16 @@ function parseArgs(argv: string[], state: DefinitionState) {
       } else {
         const value = argv[i + 1];
         if (value && !value.startsWith('--')) {
-          optionsResult[key] = value;
+          // Coerce based on valueType if declared
+          if ((matching as any).valueType === 'number') {
+            const coerced = Number(value);
+            if (Number.isNaN(coerced)) {
+              throw new MissingOptionValueError(matching.flag, matching.valueName);
+            }
+            optionsResult[key] = coerced;
+          } else {
+            optionsResult[key] = value;
+          }
           i += 1;
         } else {
           throw new MissingOptionValueError(matching.flag, matching.valueName);
