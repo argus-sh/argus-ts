@@ -60,6 +60,20 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
     },
 
     option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
+      // Support composite flag declaration like "--config <file>"
+      const composite = flag.match(/^(--[A-Za-z0-9_-]+)\s+<([^>]+)>$/);
+      if (composite) {
+        const baseFlag = composite[1];
+        const valueName = composite[2];
+        state.options.push({
+          kind: 'valueOption',
+          flag: baseFlag,
+          description,
+          defaultValue: (config as any)?.defaultValue as string | undefined,
+          valueName,
+        });
+        return builder as CliBuilder<any, any>;
+      }
       if (config && config.valueName) {
         const valueName = config.valueName.slice(1, -1);
         state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue as string | undefined, valueName });
@@ -101,6 +115,19 @@ function createBuilder(state: DefinitionState) {
       return b;
     },
     option(flag: string, description?: string, config?: { defaultValue?: boolean | string; valueName?: `<${string}>` }) {
+      const composite = flag.match(/^(--[A-Za-z0-9_-]+)\s+<([^>]+)>$/);
+      if (composite) {
+        const baseFlag = composite[1];
+        const valueName = composite[2];
+        state.options.push({
+          kind: 'valueOption',
+          flag: baseFlag,
+          description,
+          defaultValue: (config as any)?.defaultValue as string | undefined,
+          valueName,
+        });
+        return b;
+      }
       if (config && config.valueName) {
         const valueName = config.valueName.slice(1, -1);
         state.options.push({ kind: 'valueOption', flag, description, defaultValue: config.defaultValue as string | undefined, valueName });
@@ -148,7 +175,7 @@ function printHelp(state: DefinitionState, ui?: Ui) {
   for (const p of state.positionals) usageParts.push(colorize.arg(`<${p.name}>`));
   for (const o of state.options) {
     if (o.kind === 'booleanOption') usageParts.push(colorize.opt(`[${o.flag}]`));
-    else usageParts.push(colorize.opt(`[${o.flag} ${colorize.arg(`<${o.valueName}>`)}]`));
+    else usageParts.push(colorize.opt(`[${o.flag} <${o.valueName}>]`));
   }
   lines.push(`${colorize.usageLabel('Usage:')} ${usageParts.join(' ')}`);
   lines.push('');
@@ -188,7 +215,7 @@ function printHelp(state: DefinitionState, ui?: Ui) {
       optionRows.push({ left: colorize.opt(o.flag), right: `${o.description ?? ''}${def}`.trim() });
     } else {
       const def = o.defaultValue !== undefined ? ` (default: ${o.defaultValue})` : '';
-      optionRows.push({ left: colorize.opt(`${o.flag} ${colorize.arg(`<${o.valueName}>`)}`), right: `${o.description ?? ''}${def}`.trim() });
+      optionRows.push({ left: colorize.opt(`${o.flag} <${o.valueName}>`), right: `${o.description ?? ''}${def}`.trim() });
     }
   }
   optionRows.push({ left: colorize.opt('--help'), right: 'Show help' });

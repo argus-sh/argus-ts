@@ -5,7 +5,7 @@ cli({
   description: 'Validação da arquitetura de inferência de tipos.',
 })
   .argument('<file>', 'O ficheiro a ser processado.')
-  .option('--strict', 'Ativar o modo estrito.', { defaultValue: false })
+  .option('--strict <x>', 'Ativar o modo estrito.', { defaultValue: false })
   .action((args, options) => {
     // Type checkpoints: args.file -> string, options.strict -> boolean
     console.log(`Processando o ficheiro: ${args.file}`);

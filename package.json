@@ -1,6 +1,6 @@
 {
   "name": "argus-ts",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A minimal, type-safe, and elegant CLI framework for Node",
   "license": "MIT",
   "publishConfig": {
@@ -33,6 +33,7 @@
     "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage",
+    "example:base": "tsx examples/base-cli.ts",
     "example:validator": "tsx examples/validator-mvp.ts",
     "example:sub": "tsx examples/subcommands.ts",
     "example:mw": "tsx examples/middleware.ts",

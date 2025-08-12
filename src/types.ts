@@ -8,7 +8,25 @@ export type CliConfig = {
 
 // Utility type helpers
 export type ExtractAngleName<T extends string> = T extends `<${infer Inner}>` ? Inner : never;
-export type NormalizeFlag<T extends string> = T extends `--${infer Name}` ? Name : T;
+// Normalize a flag to the bare name without leading dashes and any trailing
+// value placeholder (e.g., "--config <file>" -> "config")
+export type NormalizeFlag<T extends string> = T extends `--${infer Rest}`
+  ? Rest extends `${infer Name} ${string}`
+    ? Name
+    : Rest
+  : T;
+
+// Extract the value placeholder name from a composite flag string
+// e.g., "--config <file>" -> "file"
+export type ExtractFlagValueName<T extends string> = T extends `${string} <${infer Inner}>`
+  ? Inner
+  : never;
+
+// Extract the base flag from a composite flag string
+// e.g., "--config <file>" -> "--config"
+export type ExtractFlagBase<T extends string> = T extends `${infer Base} <${string}>`
+  ? Base
+  : T;
 
 // Argument/Option definitions
 export type PositionalArgDefinition<Name extends string> = {
@@ -127,6 +145,13 @@ export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[
     [...OptDefs, BooleanOptionDefinition<FlagSpec>]
   >;
 
+  // Value option provided as composite flag string, e.g. "--config <file>"
+  option<FlagSpec extends `--${string} <${string}>`>(flag: FlagSpec, description?: string, config?: { defaultValue?: string }): CliBuilder<
+    PosDefs,
+    [...OptDefs, ValueOptionDefinition<ExtractFlagBase<FlagSpec>, ExtractFlagValueName<FlagSpec>>]
+  >;
+
+  // Value option with explicit valueName in config
   option<FlagSpec extends `--${string}`, ValueSpec extends `<${string}>`>(flag: FlagSpec, description: string, config: { defaultValue?: string } & { valueName?: ValueSpec }): CliBuilder<
     PosDefs,
     [...OptDefs, ValueOptionDefinition<FlagSpec, ExtractAngleName<ValueSpec>>]
