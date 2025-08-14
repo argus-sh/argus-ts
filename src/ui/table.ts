@@ -23,7 +23,7 @@ export function drawTable<T extends Record<string, unknown>>(
 	}
 
 	// Determine columns and header titles
-	let columnKeys: (keyof T)[] = inferredKeys
+	const columnKeys: (keyof T)[] = inferredKeys
 	let headerTitles: string[] = inferredKeys.map((k) => String(k))
 
 	// Use provided head as titles; we will validate length vs columns at runtime

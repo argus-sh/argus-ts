@@ -255,7 +255,7 @@ export type CliExecutor = {
 }
 
 // Table types
-export type TableOptions<T extends Record<string, unknown>> = {
+export type TableOptions<_T extends Record<string, unknown>> = {
 	/**
 	 * Header labels as an array. At runtime, must match the number of columns
 	 * inferred from the first row (or define the number of columns when data is empty).
