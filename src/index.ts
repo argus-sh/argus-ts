@@ -4,7 +4,7 @@ import {
 	MissingArgumentError,
 	MissingOptionValueError,
 	UnknownOptionError
-} from './errors/index.js'
+} from './errors/index'
 import type {
 	ActionHandler,
 	AnyOptionDefinition,
@@ -16,7 +16,7 @@ import type {
 	PositionalArgDefinition,
 	Ui
 } from './types'
-import { createUi } from './ui/index.js'
+import { createUi } from './ui/index'
 
 // Internals to hold definitions
 class DefinitionState {

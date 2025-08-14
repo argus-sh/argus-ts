@@ -1,5 +1,5 @@
 import readline from 'node:readline'
-import type { SelectChoice, SelectOptions } from '../types.js'
+import type { SelectChoice, SelectOptions } from '../types'
 
 export async function promptInput(message: string): Promise<string> {
 	const rl = readline.createInterface({

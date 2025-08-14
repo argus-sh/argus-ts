@@ -44,7 +44,8 @@
     "example:validator": "tsx examples/validator-mvp.ts",
     "example:sub": "tsx examples/subcommands.ts",
     "example:mw": "tsx examples/middleware.ts",
-    "example:spinners": "tsx examples/spinners.ts"
+    "example:spinners": "tsx examples/spinners.ts",
+    "example:table": "tsx examples/table.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",

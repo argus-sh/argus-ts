@@ -233,6 +233,35 @@ cli({ name: "ui-demo" })
   .parse();
 ```
 
+### UI Tables
+
+Render ASCII tables without external dependencies via the built-in UI toolkit.
+
+```ts
+import { cli } from "argus-ts";
+
+cli({ name: "table-demo" })
+  .action((_args, _opts, { ui }) => {
+    ui.box(ui.colors.bold("Users"), "Table Demo");
+
+    // Inferred headers from object keys
+    ui.table([
+      { name: "Alice", age: 30, role: "Engineer" },
+      { name: "Bob", age: 25, role: "Designer" }
+    ]);
+
+    // Custom headers
+    ui.table(
+      [
+        { id: 1, title: "Item 1" },
+        { id: 2, title: "Item 2" }
+      ],
+      { head: ["ID", "Title"] }
+    );
+  })
+  .parse();
+```
+
 ### Advanced Help & Errors
 
 - `--help` prints colored, aligned sections (Commands, Arguments, Options)

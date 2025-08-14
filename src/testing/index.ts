@@ -1,5 +1,5 @@
-import { ArgusError } from '../errors/index.js'
-import type { CliExecutor } from '../types.js'
+import { ArgusError } from '../errors/index'
+import type { CliExecutor } from '../types'
 
 export type TestHarness = {
 	execute: (

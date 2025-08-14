@@ -1,4 +1,4 @@
-import type { Colors } from '../types.js'
+import type { Colors } from '../types'
 
 const ANSI = {
 	reset: '\x1b[0m',

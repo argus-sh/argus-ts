@@ -1,14 +1,15 @@
-import type { SelectChoice, Ui } from '../types.js'
-import { drawBox } from './box.js'
-import { createColors } from './colors.js'
-import { promptInput, promptSelect } from './prompt.js'
-import { createSpinner } from './spinner.js'
+import type { SelectChoice, Ui } from '../types'
+import { drawBox } from './box'
+import { createColors } from './colors'
+import { promptInput, promptSelect } from './prompt'
+import { createSpinner } from './spinner'
+import { drawTable } from './table'
 
 export function createUi(): Ui {
 	const colors = createColors()
 	return {
 		colors,
-		spinner: (textOrOptions?: string | import('../types.js').SpinnerOptions) =>
+		spinner: (textOrOptions?: string | import('../types').SpinnerOptions) =>
 			createSpinner(textOrOptions as any, colors),
 		prompt: {
 			input: (message: string) => promptInput(message),
@@ -21,7 +22,11 @@ export function createUi(): Ui {
 				}
 			) => promptSelect(message, choices, options)
 		},
-		box: (text: string, title?: string) => drawBox(text, { title, padding: 1 })
+		box: (text: string, title?: string) => drawBox(text, { title, padding: 1 }),
+		table: <T extends Record<string, unknown>>(
+			data: ReadonlyArray<T>,
+			options?: import('../types').TableOptions<T>
+		) => drawTable<T>(data, options)
 	}
 }
 

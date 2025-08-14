@@ -1,4 +1,4 @@
-import type { Colors, Spinner, SpinnerOptions } from '../types.js'
+import type { Colors, Spinner, SpinnerOptions } from '../types'
 
 const PRESETS: Record<
 	NonNullable<Exclude<SpinnerOptions['frames'], string[]>>,

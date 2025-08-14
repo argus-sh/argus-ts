@@ -144,6 +144,16 @@ export type Ui = {
 		) => Promise<string>
 	}
 	box: (text: string, title?: string) => void
+	/**
+	 * Render an ASCII table from an array of objects. The generic parameter T
+	 * captures the shape of each row so downstream code can benefit from key
+	 * inference when preparing data. The headers can still be customized via
+	 * options.head which remains free-form labels.
+	 */
+	table: <T extends Record<string, unknown>>(
+		data: ReadonlyArray<T>,
+		options?: TableOptions<T>
+	) => void
 }
 
 // Action and middleware
@@ -242,4 +252,13 @@ export type CliBuilder<
 
 export type CliExecutor = {
 	parse(argv?: string[]): void | Promise<void>
+}
+
+// Table types
+export type TableOptions<T extends Record<string, unknown>> = {
+	/**
+	 * Header labels as an array. At runtime, must match the number of columns
+	 * inferred from the first row (or define the number of columns when data is empty).
+	 */
+	head?: ReadonlyArray<string>
 }
