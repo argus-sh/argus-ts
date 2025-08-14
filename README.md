@@ -82,6 +82,24 @@ cli({
   .parse();
 ```
 
+### Testing Utilities
+
+To test your CLI without spawning a real process, use the in-memory test harness.
+
+```ts
+import { cli } from "argus-ts";
+import { createTestHarness } from "argus-ts/testing";
+
+const program = cli({ name: "greet" })
+  .argument("<user>")
+  .action((args) => {
+    console.log(`Hello, ${args.user}!`);
+  });
+
+const h = createTestHarness(program);
+const { stdout, stderr, exitCode } = await h.execute(["World"]);
+```
+
 ### Running the Example
 
 To run the example script using tsx (a tool for direct TypeScript execution):
