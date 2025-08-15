@@ -44,12 +44,18 @@
     "example:validator": "tsx examples/validator-mvp.ts",
     "example:sub": "tsx examples/subcommands.ts",
     "example:mw": "tsx examples/middleware.ts",
-    "example:spinners": "tsx examples/spinners.ts"
+    "example:spinners": "tsx examples/spinners.ts",
+    "api:extract": "api-extractor run --local",
+    "api:extract:testing": "api-extractor run --local -c api-extractor.testing.json",
+    "api:docs": "api-documenter markdown -i temp/main -o docs/api/main && api-documenter markdown -i temp/testing -o docs/api/testing",
+    "docs": "npm run build && npm run api:extract && npm run api:extract:testing && npm run api:docs"
   },
   "devDependencies": {
+    "@microsoft/api-documenter": "^7.26.31",
+    "@microsoft/api-extractor": "^7.52.10",
     "@types/node": "^22.5.2",
-    "rimraf": "^5.0.10",
     "@vitest/coverage-v8": "^2.1.9",
+    "rimraf": "^5.0.10",
     "tsx": "^4.16.2",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
