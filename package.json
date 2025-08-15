@@ -45,6 +45,7 @@
     "example:sub": "tsx examples/subcommands.ts",
     "example:mw": "tsx examples/middleware.ts",
     "example:spinners": "tsx examples/spinners.ts",
+<<<<<<< HEAD
     "api:extract": "api-extractor run --local",
     "api:extract:testing": "api-extractor run --local -c api-extractor.testing.json",
     "api:docs": "api-documenter markdown -i temp/main -o docs/api/main && api-documenter markdown -i temp/testing -o docs/api/testing",
@@ -53,6 +54,12 @@
   "devDependencies": {
     "@microsoft/api-documenter": "^7.26.31",
     "@microsoft/api-extractor": "^7.52.10",
+=======
+    "example:table": "tsx examples/table.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.0",
+>>>>>>> ca99861fd48c48c15dfd459a280320d2c21511b0
     "@types/node": "^22.5.2",
     "@vitest/coverage-v8": "^2.1.9",
     "rimraf": "^5.0.10",
