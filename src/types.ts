@@ -182,7 +182,8 @@ export type CliBuilder<
 > = {
 	command<Name extends string>(
 		name: Name,
-		description?: string
+		description?: string,
+		options?: { aliases?: string[] }
 	): CliBuilder<[], []>
 	use(middleware: Middleware): CliBuilder<PosDefs, OptDefs>
 

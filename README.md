@@ -7,22 +7,77 @@
 <img src="https://img.shields.io/badge/License-MIT-teal.svg" alt="License: MIT">
 </a>
 <a href="#">
-<img src="https://img.shields.io/badge/Version-1.1.0%20(Stable)-blueviolet.svg" alt="Version">
-\</a>
+<img src="https://img.shields.io/badge/Version-1.2.0%20(QoL%20%26%20Testability)-blueviolet.svg" alt="Version">
+</a>
 <a href="#">
 <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
 </a>
 </p>
 
-Argus-TS is a framework to build CLIs in TypeScript with automatic, end‑to‑end type inference. Version 1.0 brings sub‑commands, middleware, an internal UI toolkit (colors, spinners, prompts, boxes), advanced help, and first‑class error handling.
+Argus-TS is a framework to build CLIs in TypeScript with automatic, end‑to‑end type inference. Version 1.2.0 brings command aliases for improved UX, enhanced testing capabilities, and UI toolkit improvements while maintaining full backward compatibility.
 
 This outputs the compiled JS and d.ts files to `dist/` and sets `exports`/`types` for Node ESM consumers.
 
-### ✨ Core Features (v1)
+## 🚀 Quick Start
+
+```bash
+npm install argus-ts
+```
+
+```ts
+import { cli } from "argus-ts";
+
+const app = cli({
+  name: "my-cli",
+  description: "A simple CLI tool.",
+});
+
+app.argument("<name>", "Your name");
+app.action(({ name }) => {
+  console.log(`Hello, ${name}!`);
+});
+
+app.parse();
+```
+
+## 🛠️ Development
+
+### Building from Source
+
+This project uses esbuild for fast bundling and proper module resolution. The build process:
+
+1. **Bundles all source files** into single output files using esbuild
+2. **Resolves all imports** correctly for distribution
+3. **Generates TypeScript declarations** for type safety
+4. **Creates source maps** for debugging
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run tests
+npm test
+
+# Create a package
+npm pack
+```
+
+### Build Scripts
+
+- `npm run build` - Build using esbuild bundler
+- `npm run build:tsc` - Build using TypeScript compiler (legacy)
+- `npm run clean` - Clean build artifacts
+- `npm run check` - Type check without building
+
+## ✨ Core Features (v1)
 
 - Fluent, chainable API
 - Automatic type inference (args/options → action types)
 - Sub‑commands with isolated types
+- Command aliases for improved user experience
 - Middleware pipeline (`.use()`) with `ctx` and `next()`
 - Built‑in UI toolkit (colors, spinners, prompts, boxes) without external deps
 - Advanced `--help` output (sections, colors, aligned)
@@ -49,37 +104,6 @@ Install development dependencies:
 
 ```sh
 npm install
-```
-
-### ⚡ Quick Start
-
-Create a powerful, type‑safe CLI in a few lines.
-
-```ts
-// examples/basic-cli.ts
-import { cli } from "argus-ts";
-
-cli({
-  name: "greet-cli",
-  description: "A simple demonstration of the Argus-TS.",
-})
-  .argument("<user>", "The username to greet.")
-  .option("--greeting <word>", "The word to use for the greeting.", {
-    defaultValue: "Hello",
-  })
-  .option("--loud", "Should the greeting be loud?", { defaultValue: false })
-  .action((args, options) => {
-    // `args.user` is automatically typed as `string`
-    // `options.greeting` is automatically typed as `string`
-    // `options.loud` is automatically typed as `boolean`
-
-    let message = `${options.greeting}, ${args.user}!`;
-    if (options.loud) {
-      message = message.toUpperCase();
-    }
-    console.log(message);
-  })
-  .parse();
 ```
 
 ### Testing Utilities
@@ -134,6 +158,63 @@ create.action(({ name }) => console.log(`Creating ${name}...`));
 
 app.parse();
 ```
+
+### Command Aliases
+
+Define short aliases for your commands to improve user experience and efficiency.
+
+```ts
+import { cli } from "argus-ts";
+
+const app = cli({
+  name: "package-manager",
+  description: "A modern package manager with command aliases.",
+});
+
+// Install command with aliases: install, i, add
+const install = app.command("install", "Install packages", { 
+  aliases: ["i", "add"] 
+});
+install.argument("<packageName>");
+install.action((args) => {
+  console.log(`Installing ${args.packageName}...`);
+});
+
+// Remove command with aliases: remove, r, uninstall
+const remove = app.command("remove", "Remove packages", { 
+  aliases: ["r", "uninstall"] 
+});
+remove.argument("<packageName>");
+remove.action((args) => {
+  console.log(`Removing ${args.packageName}...`);
+});
+
+app.parse();
+```
+
+Now users can run commands using any of the defined aliases:
+
+```bash
+# These all execute the same command:
+package-manager install react
+package-manager i react
+package-manager add react
+
+# These all execute the same command:
+package-manager remove vue
+package-manager r vue
+package-manager uninstall vue
+```
+
+The help text automatically displays aliases alongside command names:
+
+```
+Commands:
+  install, i, add       Install packages
+  remove, r, uninstall  Remove packages
+```
+
+**Note:** Aliases are validated to prevent conflicts with existing command names or other aliases. The system will throw an error if you try to use an alias that conflicts with an existing command or alias.
 
 ### Typed Options (string and number)
 

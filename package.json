@@ -1,6 +1,6 @@
 {
   "name": "argus-ts",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A minimal, type-safe, and elegant CLI framework for Node",
   "license": "MIT",
   "publishConfig": {
@@ -15,27 +15,29 @@
     "command-line"
   ],
   "type": "module",
-  "main": "dist/src/index.js",
-  "module": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "default": "./dist/src/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./testing": {
-      "types": "./dist/src/testing/index.d.ts",
-      "import": "./dist/src/testing/index.js",
-      "default": "./dist/src/testing/index.js"
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "build.js"
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "node build.js",
+    "build:tsc": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage",
     "prepare": "npm run build",
@@ -52,11 +54,12 @@
     "example:table": "tsx examples/table.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.0",
     "@microsoft/api-documenter": "^7.26.31",
     "@microsoft/api-extractor": "^7.52.10",
-    "@biomejs/biome": "2.2.0",
     "@types/node": "^22.5.2",
     "@vitest/coverage-v8": "^2.1.9",
+    "esbuild": "^0.25.9",
     "rimraf": "^5.0.10",
     "tsx": "^4.16.2",
     "typescript": "^5.5.4",

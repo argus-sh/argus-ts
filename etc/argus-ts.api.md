@@ -14,7 +14,9 @@ export function cli(config: CliConfig): CliBuilder<[], []>;
 //
 // @public (undocumented)
 export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[], OptDefs extends readonly AnyOptionDefinition[]> = {
-    command<Name extends string>(name: Name, description?: string): CliBuilder<[], []>;
+    command<Name extends string>(name: Name, description?: string, options?: {
+        aliases?: string[];
+    }): CliBuilder<[], []>;
     use(middleware: Middleware): CliBuilder<PosDefs, OptDefs>;
     argument<NameSpec extends `<${string}>`>(name: NameSpec, description?: string): CliBuilder<[
     ...PosDefs,
@@ -22,10 +24,7 @@ export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[
     ], OptDefs>;
     option<FlagSpec extends `--${string}`>(flag: FlagSpec, description?: string, config?: {
         defaultValue?: boolean;
-    }): CliBuilder<PosDefs, [
-    ...OptDefs,
-    BooleanOptionDefinition<FlagSpec>
-    ]>;
+    }): CliBuilder<PosDefs, [...OptDefs, BooleanOptionDefinition<FlagSpec>]>;
     option<FlagSpec extends `--${string} <${string}>`>(flag: FlagSpec, description?: string, config?: {
         defaultValue?: string;
     }): CliBuilder<PosDefs, [
@@ -61,15 +60,15 @@ export type CliExecutor = {
 
 // Warnings were encountered during analysis:
 //
-// dist/src/types.d.ts:99:5 - (ae-forgotten-export) The symbol "Middleware" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:100:5 - (ae-forgotten-export) The symbol "ExtractAngleName" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:104:5 - (ae-forgotten-export) The symbol "BooleanOptionDefinition" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:110:5 - (ae-forgotten-export) The symbol "ValueOptionDefinition" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:110:5 - (ae-forgotten-export) The symbol "ExtractFlagBase" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:110:5 - (ae-forgotten-export) The symbol "ExtractFlagValueName" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:134:5 - (ae-forgotten-export) The symbol "ActionHandler" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:134:5 - (ae-forgotten-export) The symbol "PositionalArgsShape" needs to be exported by the entry point index.d.ts
-// dist/src/types.d.ts:134:5 - (ae-forgotten-export) The symbol "OptionsShape" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:108:5 - (ae-forgotten-export) The symbol "Middleware" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:109:5 - (ae-forgotten-export) The symbol "ExtractAngleName" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:113:5 - (ae-forgotten-export) The symbol "BooleanOptionDefinition" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:116:5 - (ae-forgotten-export) The symbol "ValueOptionDefinition" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:116:5 - (ae-forgotten-export) The symbol "ExtractFlagBase" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:116:5 - (ae-forgotten-export) The symbol "ExtractFlagValueName" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:140:5 - (ae-forgotten-export) The symbol "ActionHandler" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:140:5 - (ae-forgotten-export) The symbol "PositionalArgsShape" needs to be exported by the entry point index.d.ts
+// dist/src/types.d.ts:140:5 - (ae-forgotten-export) The symbol "OptionsShape" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

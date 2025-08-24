@@ -8,7 +8,9 @@
 
 ```typescript
 export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[], OptDefs extends readonly AnyOptionDefinition[]> = {
-    command<Name extends string>(name: Name, description?: string): CliBuilder<[], []>;
+    command<Name extends string>(name: Name, description?: string, options?: {
+        aliases?: string[];
+    }): CliBuilder<[], []>;
     use(middleware: Middleware): CliBuilder<PosDefs, OptDefs>;
     argument<NameSpec extends `<${string}>`>(name: NameSpec, description?: string): CliBuilder<[
         ...PosDefs,
@@ -16,10 +18,7 @@ export type CliBuilder<PosDefs extends readonly PositionalArgDefinition<string>[
     ], OptDefs>;
     option<FlagSpec extends `--${string}`>(flag: FlagSpec, description?: string, config?: {
         defaultValue?: boolean;
-    }): CliBuilder<PosDefs, [
-        ...OptDefs,
-        BooleanOptionDefinition<FlagSpec>
-    ]>;
+    }): CliBuilder<PosDefs, [...OptDefs, BooleanOptionDefinition<FlagSpec>]>;
     option<FlagSpec extends `--${string} <${string}>`>(flag: FlagSpec, description?: string, config?: {
         defaultValue?: string;
     }): CliBuilder<PosDefs, [

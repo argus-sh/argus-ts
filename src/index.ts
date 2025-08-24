@@ -8,13 +8,15 @@ import {
 import type {
 	ActionHandler,
 	AnyOptionDefinition,
+	BooleanOptionDefinition,
 	CliBuilder,
 	CliConfig,
 	CliExecutor,
 	Middleware,
 	MiddlewareContext,
 	PositionalArgDefinition,
-	Ui
+	Ui,
+	ValueOptionDefinition
 } from './types'
 import { createUi } from './ui/index'
 
@@ -25,6 +27,7 @@ class DefinitionState {
 	public readonly subcommands: {
 		name: string
 		description?: string
+		aliases?: string[]
 		state: DefinitionState
 		builder: any
 	}[] = []
@@ -44,7 +47,35 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
 	const state = new DefinitionState(config, [config.name])
 
 	const builder: any = {
-		command(name: string, description?: string) {
+		command(
+			name: string,
+			description?: string,
+			options?: { aliases?: string[] }
+		) {
+			// Validate aliases don't conflict with existing commands
+			if (options?.aliases) {
+				for (const alias of options.aliases) {
+					// Check if alias conflicts with existing command names
+					const existingCommand = state.subcommands.find(
+						(cmd) => cmd.name === alias
+					)
+					if (existingCommand) {
+						throw new Error(
+							`Alias '${alias}' conflicts with existing command '${existingCommand.name}'`
+						)
+					}
+					// Check if alias conflicts with existing aliases
+					const existingAlias = state.subcommands.find(
+						(cmd) => cmd.aliases && cmd.aliases.includes(alias)
+					)
+					if (existingAlias) {
+						throw new Error(
+							`Alias '${alias}' conflicts with existing alias for command '${existingAlias.name}'`
+						)
+					}
+				}
+			}
+
 			const childState = new DefinitionState(
 				state.config,
 				[...state.commandPath, name],
@@ -54,6 +85,7 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
 			state.subcommands.push({
 				name,
 				description,
+				aliases: options?.aliases,
 				state: childState,
 				builder: childBuilder
 			})
@@ -137,7 +169,35 @@ export function cli(config: CliConfig): CliBuilder<[], []> {
 
 function createBuilder(state: DefinitionState) {
 	const b: any = {
-		command(name: string, description?: string) {
+		command(
+			name: string,
+			description?: string,
+			options?: { aliases?: string[] }
+		) {
+			// Validate aliases don't conflict with existing commands
+			if (options?.aliases) {
+				for (const alias of options.aliases) {
+					// Check if alias conflicts with existing command names
+					const existingCommand = state.subcommands.find(
+						(cmd) => cmd.name === alias
+					)
+					if (existingCommand) {
+						throw new Error(
+							`Alias '${alias}' conflicts with existing command '${existingCommand.name}'`
+						)
+					}
+					// Check if alias conflicts with existing aliases
+					const existingAlias = state.subcommands.find(
+						(cmd) => cmd.aliases && cmd.aliases.includes(alias)
+					)
+					if (existingAlias) {
+						throw new Error(
+							`Alias '${alias}' conflicts with existing alias for command '${existingAlias.name}'`
+						)
+					}
+				}
+			}
+
 			const childState = new DefinitionState(
 				state.config,
 				[...state.commandPath, name],
@@ -147,6 +207,7 @@ function createBuilder(state: DefinitionState) {
 			state.subcommands.push({
 				name,
 				description,
+				aliases: options?.aliases,
 				state: childState,
 				builder: childBuilder
 			})
@@ -254,12 +315,21 @@ function printHelp(state: DefinitionState, ui?: Ui) {
 	// Commands
 	if (state.subcommands.length) {
 		lines.push(colorize.section('Commands:'))
-		const names = state.subcommands.map((c) => c.name)
-		const nameWidth = Math.max(...names.map((n) => n.length))
+		const commandRows: { left: string; right: string }[] = []
 		for (const c of state.subcommands) {
-			const left = colorize.cmd(c.name.padEnd(nameWidth))
+			let left = colorize.cmd(c.name)
+			if (c.aliases && c.aliases.length > 0) {
+				left += `, ${c.aliases.map((alias) => colorize.cmd(alias)).join(', ')}`
+			}
 			const right = c.description ?? ''
-			lines.push(`  ${left}  ${right}`.trimEnd())
+			commandRows.push({ left, right })
+		}
+		const leftWidth = Math.max(
+			...commandRows.map((r) => stripAnsiLike(r.left).length)
+		)
+		for (const r of commandRows) {
+			const paddedLeft = padAnsiLike(r.left, leftWidth)
+			lines.push(`  ${paddedLeft}  ${r.right}`.trimEnd())
 		}
 		lines.push('')
 	}
@@ -348,14 +418,19 @@ async function runParse(
 
 	// Sub-command dispatch: if first token matches a sub-command, delegate
 	if (argsv[0] && !String(argsv[0]).startsWith('--')) {
-		const sub = state.subcommands.find((s) => s.name === argsv[0])
+		const commandToken = argsv[0]
+		const sub = state.subcommands.find(
+			(s) =>
+				s.name === commandToken ||
+				(s.aliases && s.aliases.includes(commandToken))
+		)
 		if (sub) {
 			return runParse(sub.state, argsv.slice(1), true)
 		} else if (state.subcommands.length) {
 			// invalid sub-command entered
 			const ui = createUi()
 			new InvalidSubcommandError(
-				String(argsv[0]),
+				String(commandToken),
 				state.subcommands.map((s) => s.name)
 			).print(ui)
 			return
