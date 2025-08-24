@@ -45,12 +45,15 @@
     "example:sub": "tsx examples/subcommands.ts",
     "example:mw": "tsx examples/middleware.ts",
     "example:spinners": "tsx examples/spinners.ts",
-    "example:table": "tsx examples/table.ts",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "api:extract": "api-extractor run --local",
+    "api:extract:testing": "api-extractor run --local -c api-extractor.testing.json",
+    "api:docs": "api-documenter markdown -i temp/main -o docs/api/main && api-documenter markdown -i temp/testing -o docs/api/testing",
+    "docs": "npm run build && npm run api:extract && npm run api:extract:testing && npm run api:docs",
+    "example:table": "tsx examples/table.ts"
   },
   "devDependencies": {
+    "@microsoft/api-documenter": "^7.26.31",
+    "@microsoft/api-extractor": "^7.52.10",
     "@biomejs/biome": "2.2.0",
     "@types/node": "^22.5.2",
     "@vitest/coverage-v8": "^2.1.9",
