@@ -45,7 +45,10 @@
     "example:sub": "tsx examples/subcommands.ts",
     "example:mw": "tsx examples/middleware.ts",
     "example:spinners": "tsx examples/spinners.ts",
-    "example:table": "tsx examples/table.ts"
+    "example:table": "tsx examples/table.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
@@ -54,6 +57,7 @@
     "rimraf": "^5.0.10",
     "tsx": "^4.16.2",
     "typescript": "^5.5.4",
+    "vitepress": "^2.0.0-alpha.11",
     "vitest": "^2.0.5"
   }
 }
